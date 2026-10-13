@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Pendaftaran - Les Private Hayam Wuruk</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            /* Background Gradient ala Web Modern */
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); 
+            background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            min-height: 100vh;
+            color: #1f2937;
+        }
+        /* Glassmorphism Effect */
+        .glass-panel { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px); 
+            border-radius: 1.5rem; 
+            border: 1px solid rgba(255, 255, 255, 0.4); 
+            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.1); 
+        }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(15px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .input-field { 
+            width: 100%; padding: 0.75rem 1.25rem; border-radius: 1rem; 
+            border: 1px solid #d1d5db; background: #f9fafb; 
+            outline: none; transition: all 0.3s; font-size: 0.95rem;
+        }
+        .input-field:focus { 
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); 
+            border-color: #6366f1; background: #ffffff; 
+        }
+        .btn-primary { 
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); 
+            color: white; padding: 0.875rem 1.5rem; border-radius: 1rem; 
+            font-weight: 600; transition: all 0.3s; width: 100%; 
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); 
+        }
+        .btn-primary:hover { 
+            transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6); 
+        }
+        .btn-primary:disabled { 
+            opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none;
+        }
+        .form-label {
+            display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.9rem; color: #4b5563;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        function App() {
+            const [step, setStep] = useState(1);
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [agreed, setAgreed] = useState(false);
+            
+            const [formData, setFormData] = useState({
+                nama: '', jk: 'Laki-laki', kelas: '', sekolah: '', bahasa: '', 
+                alamat: '', mapel: '', durasi: '', jadwal: '', alternatif: '', 
+                ortu: '', hportu: '', darurat: '', hpsiswa: '', tentor: '', 
+                mulailes: '', metode: 'Offline', info: 'Tidak', rekomendasi: ''
+            });
+
+            const handleChange = (e) => {
+                setFormData({ ...formData, [e.target.name]: e.target.value });
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+                
+                // URL Google Apps Script yang baru
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbyePIqtcz0C5MDFS5MK_sge5NKVKqrOkywvHULElht6WBEhqpkvHMpeN3IRp0mBjhwA/exec';
+                
+                const data = new URLSearchParams();
+                for (const key in formData) {
+                    data.append(key, formData[key]);
+                }
+
+                try {
+                    // 1. Simpan ke Google Sheets (Background process)
+                    await fetch(scriptURL, { 
+                        method: 'POST', 
+                        body: data 
+                    });
+
+                    // 2. Redirect ke WhatsApp
+                    const waMessage = `*Data Diri Siswa*
+
+Nama lengkap : ${formData.nama}
+Jenis kelamin: ${formData.jk}
+Kelas : ${formData.kelas}
+Sekolah : ${formData.sekolah}
+Bahasa pengantar : ${formData.bahasa}
+Alamat Lengkap : ${formData.alamat}
+Mapel Les : ${formData.mapel}
+Tipe Les/Durasi Les : ${formData.durasi}
+Hari dan jam les : ${formData.jadwal}
+Alternatif hari/jam : ${formData.alternatif}
+Nama ortu : ${formData.ortu}
+No. Hp ortu : ${formData.hportu}
+No. Kontak Darurat : ${formData.darurat}
+No HP siswa : ${formData.hpsiswa}
+Request tentor : ${formData.tentor}
+Mulai les tanggal : ${formData.mulailes}
+Les secara : ${formData.metode}
+Dapat info dari teman/saudara? : ${formData.info}
+${formData.info === 'Ya' ? `*Nama yang merekom : ${formData.rekomendasi}` : ''}`;
+
+                    const waNumber = "6281930663405";
+                    const waURL = `https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`;
+                    
+                    window.location.href = waURL;
+
+                } catch (error) {
+                    console.error('Error!', error.message);
+                    alert('Terjadi kesalahan saat mengirim data. Pastikan koneksi internet lancar.');
+                    setIsSubmitting(false);
+                }
+            };
+
+            return (
+                <div className="max-w-3xl mx-auto glass-panel p-6 md:p-10 fade-in">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 mb-2">
+                            Les Private Hayam Wuruk
+                        </h1>
+                        <p className="text-gray-500">Formulir Pendaftaran Siswa Baru</p>
+                    </div>
+
+                    {step === 1 ? (
+                        <form className="fade-in space-y-5" onSubmit={() => setStep(2)}>
+                            <h2 className="text-xl font-semibold border-b pb-2 mb-4">Data Diri Siswa</h2>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label className="form-label">Nama Lengkap</label>
+                                    <input required type="text" name="nama" value={formData.nama} onChange={handleChange} className="input-field" placeholder="Masukkan nama lengkap" />
+                                </div>
+                                <div>
+                                    <label className="form-label">Jenis Kelamin</label>
+                                    <select name="jk" value={formData.jk} onChange={handleChange} className="input-field">
+                                        <option value="Laki-laki">Laki-laki</option>
+                                        <option value="Perempuan">Perempuan</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="form-label">Kelas</label>
+                                    <input required type="text" name="kelas" value={formData.kelas} onChange={handleChange} className="input-field" placeholder="Contoh: 4 SD" />
+                                </div>
+                                <div>
+                                    <label className="form-label">Sekolah</label>
+                                    <input required type="text" name="sekolah" value={formData.sekolah} onChange={handleChange} className="input-field" placeholder="Nama sekolah" />
+                                </div>
+                                <div>
+                                    <label className="form-label">Bahasa Pengantar</label>
+                                    <input required type="text" name="bahasa" value={formData.bahasa} onChange={handleChange} className="input-field" placeholder="Indonesia / Inggris / dll" />
+                                </div>
+                                <div>
+                                    <label className="form-label">Alamat Lengkap</label>
+                                    <input required type="text" name="alamat" value={formData.alamat} onChange={handleChange} className="input-field" placeholder="Alamat rumah lengkap" />
+                                </div>
+                                <div>
+                                    <label className="form-label">Mapel Les</label>
+                                    <input required type="text" name="mapel" value={formData.mapel} onChange={handleChange} className="input-field" placeholder="Contoh: Matematika, IPA" />
+                                </div>
+                                <div>
+                                    <label className="form-label">Tipe Les / Durasi</label>
+                                    <input required type="text" name="durasi" value={formData.durasi} onChange={handleChange} className="input-field" placeholder="Contoh: Private / 1.5 Jam" />
+                                </div>
+                                <div>
+                                    <label className="form-label">Hari dan Jam Les</label>
+                                    <input required type="text" name="jadwal" value={formData.jadwal} onChange={handleChange} className="input-field" placeholder="Contoh: Senin & Rabu, 15:00" />
+                                </div>
+                                <div>
+                                    <label className="form-label">Alternatif Hari/Jam (Opsional)</label>
+                                    <input type="text" name="alternatif" value={formData.alternatif} onChange={handleChange} className="input-field" placeholder="Jadwal cadangan" />
+                                </div>
+                                <div>
+                                    <label className="form-label">Nama Ortu</label>
+                                    <input required type="text" name="ortu" value={formData.ortu} onChange={handleChange} className="input-field" placeholder="Nama orang tua/wali" />
+                                </div>
+                                <div>
+                                    <label className="form-label">No. HP Ortu (WA)</label>
+                                    <input required type="tel" name="hportu" value={formData.hportu} onChange={handleChange} className="input-field" placeholder="08..." />
+                                </div>
+                                <div>
+                                    <label className="form-label">No. Kontak Darurat</label>
+                                    <input required type="tel" name="darurat" value={formData.darurat} onChange={handleChange} className="input-field" placeholder="08..." />
+                                </div>
+                                <div>
+                                    <label className="form-label">No. HP Siswa (Opsional)</label>
+                                    <input type="tel" name="hpsiswa" value={formData.hpsiswa} onChange={handleChange} className="input-field" placeholder="08..." />
+                                </div>
+                                <div>
+                                    <label className="form-label">Request Tentor (Opsional)</label>
+                                    <input type="text" name="tentor" value={formData.tentor} onChange={handleChange} className="input-field" placeholder="Contoh: Sabar, Perempuan" />
+                                </div>
+                                <div>
+                                    <label className="form-label">Mulai Les Tanggal</label>
+                                    <input required type="date" name="mulailes" value={formData.mulailes} onChange={handleChange} className="input-field" />
+                                </div>
+                                <div>
+                                    <label className="form-label">Les Secara</label>
+                                    <select name="metode" value={formData.metode} onChange={handleChange} className="input-field">
+                                        <option value="Offline">Offline (Tatap Muka)</option>
+                                        <option value="Online">Online</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="form-label">Info dari teman/saudara yang pernah les di HW?</label>
+                                    <select name="info" value={formData.info} onChange={handleChange} className="input-field">
+                                        <option value="Tidak">Tidak</option>
+                                        <option value="Ya">Ya</option>
+                                    </select>
+                                </div>
+                                
+                                {formData.info === 'Ya' && (
+                                    <div className="fade-in md:col-span-2">
+                                        <label className="form-label text-indigo-600 font-bold">*Nama yang merekomendasikan</label>
+                                        <input required type="text" name="rekomendasi" value={formData.rekomendasi} onChange={handleChange} className="input-field border-indigo-300" placeholder="Masukkan nama teman/saudara" />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="mt-8">
+                                <button type="submit" className="btn-primary" onClick={(e) => {
+                                    const form = e.target.closest('form');
+                                    if(form.checkValidity()) {
+                                        e.preventDefault();
+                                        setStep(2);
+                                        window.scrollTo(0,0);
+                                    }
+                                }}>Lanjut ke Persyaratan & Ketentuan &rarr;</button>
+                            </div>
+                        </form>
+                    ) : (
+                        <div className="fade-in space-y-6">
+                            <h2 className="text-xl font-semibold border-b pb-2">Ketentuan Les Hayam Wuruk</h2>
+                            
+                            <div className="bg-white/60 p-5 rounded-xl text-sm md:text-base space-y-3 text-gray-700 leading-relaxed max-h-96 overflow-y-auto border border-white">
+                                <p><strong>1.</strong> Segala bentuk komunikasi antara tentor dengan siswa harus disampaikan kepada Les Private Hayam Wuruk (HW).</p>
+                                <p><strong>2.</strong> Durasi les sesuai data diri yang diisi siswa, baik 1,5 jam ataupun 2 jam. Apabila ada overtime, maka akan dikenakan biaya yang berlaku.</p>
+                                <p><strong>3.</strong> Untuk satu mapel/tentor minimal 4x pertemuan sebulan.</p>
+                                <p><strong>4.</strong> Tentor SMA hanya dapat mengajar 1 mapel, sedangkan tentor SD dan SMP dapat mengajar semua mapel.</p>
+                                <p><strong>5.</strong> Setelah pertemuan pertama, siswa dapat <em>memberikan tanggapan</em> kepada HW terkait kinerja tentor. Apabila siswa merasa tidak cocok pada pertemuan pertama, <strong>siswa bisa mengajukan pergantian tentor dengan meyertakan alasan sebagai feedback kepada tentor.</strong></p>
+                                <p><strong>6.</strong> Tagihan les dibayarkan setelah mendapat surat tagihan pada awal bulan dari HW melalui <em>TF Bank ke kami</em> <strong>maksimal 10 hari setelah tagihan diberikan.</strong></p>
+                                <p><strong>7.</strong> Apabila ingin libur les sejenak (tanggal merah, keluar kota, atau keperluan lainnya), maupun perubahan jadwal les <strong>dimohon untuk menghubungi kami dan tentor.</strong></p>
+                                <p><strong>8.</strong> Apabila poin nomer 7 dilanggar, maka siswa dikenakan denda sebesar <strong>30k</strong> sebagai biaya pembatalan.</p>
+                                <p><strong>9.</strong> Memberikan izin tentor untuk melakukan foto saat les sebagai dokumentasi dan akan di upload ke instagram HW.</p>
+                                <p><strong>10.</strong> Jika ada kendala selama les dapat di konsultasikan langsung ke-saya 🙋 (Kak Nikmah) baik keluhan pada tentor, ganti tentor, hingga berhenti les 😊</p>
+                            </div>
+
+                            <label className="flex items-start space-x-3 cursor-pointer p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
+                                <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" />
+                                <span className="text-sm font-medium text-gray-700">Saya telah membaca, memahami, dan menyetujui seluruh Ketentuan Les Hayam Wuruk di atas.</span>
+                            </label>
+
+                            <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                                <button type="button" onClick={() => setStep(1)} className="px-6 py-3 rounded-xl font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all">
+                                    &larr; Kembali Edit Data
+                                </button>
+                                <button type="button" disabled={!agreed || isSubmitting} onClick={handleSubmit} className="btn-primary flex-1 flex justify-center items-center">
+                                    {isSubmitting ? 'Mengirim Data...' : 'Kirim Data Pendaftaran'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
